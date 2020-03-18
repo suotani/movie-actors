@@ -1,10 +1,10 @@
-module Actors exposing (..)
+module Actor exposing (..)
 import Browser
 import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes exposing(..)
 import Http
-import Json.Decode exposing (Decoder, Error,maybe,  int, string, list, map2, map3, map4, field)
+import Json.Decode exposing (Decoder, Error,maybe,  int, string, list, map2, field)
 
 -- MAIN
 
@@ -18,22 +18,17 @@ main =
 
 
 -- MODEL
-type alias Movie =
-  { title : Maybe String
-  , id : Maybe Int 
-  }
 
 type alias Actor = 
   { imagePath : Maybe String
   , name : Maybe String
-  , id : Maybe Int
   -- , movies : List Movie
   }
 
 type alias Model =
-  { actors : List Actor
+  { actor : Maybe Actor
   , viewStatus : ViewStatus
-  , query : String
+  , id : String
   , message : String
   }
 
@@ -42,61 +37,49 @@ type ViewStatus
    | Loaded
   
 
-init : () -> (Model, Cmd Msg)
-init _ = (Model [] Loading "jon" "", getActors "jon")
+init : String -> (Model, Cmd Msg)
+init id = (Model Nothing Loading id "", getActor id)
 
 -- UPDATE
 type Msg
-  = GotActors (Result Http.Error (List Actor))
-  | SetQuery String
-  | GetActors
+  = GotActor (Result Http.Error Actor)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    GotActors result ->
+    GotActor result ->
       case result of
-        Ok actors ->
-          ({model | actors = actors, viewStatus = Loaded }, Cmd.none)
+        Ok actor ->
+          ({model | actor = Just actor, viewStatus = Loaded }, Cmd.none)
         
         Err e ->
-          ({model | actors = [], viewStatus = Loaded, message = errorToString e }, Cmd.none)
-  
-    SetQuery query ->
-      ( { model | query = query}, Cmd.none)
-    
-    GetActors ->
-      (model, getActors model.query)
+          ({model | actor = Nothing, viewStatus = Loaded, message = errorToString e }, Cmd.none)
 
 -- VIEW
 
 view : Model -> Html Msg
 view model = 
   div []
-    [ div [class "search"]
-        [ input [type_ "text", onInput SetQuery] []
-        , button [type_ "button", onClick GetActors] [text "Search"]
-        ]
-    , case model.viewStatus of
+    [ case model.viewStatus of
         Loading ->
           p [] [text "Loading..."]
         
         Loaded ->
-          if model.actors == [] then
+          if model.actor == Nothing then
             div [] 
               [ p [] [text "no actors load"]
               , p [] [text model.message]
               ]
           else
-            div [] (List.map (\u -> actorView u) model.actors)
+            div [] [actorView model.actor]
     ]
 
-actorView : Actor -> Html Msg
+actorView : Maybe Actor -> Html Msg
 actorView actor =
-  case actor.name of
-    Just name ->
+  case actor of
+    Just a ->
       p []
-        [ a [href <| "./actor.html?id=" ++ (String.fromInt <| Maybe.withDefault 0 actor.id)] [text name]
+        [ h1 [] [text <| Maybe.withDefault "" a.name]
         ]
     
     Nothing ->
@@ -105,23 +88,18 @@ actorView actor =
 
 -- HTTP
 
-getActors : String -> Cmd Msg
-getActors query =
+getActor : String -> Cmd Msg
+getActor id =
   Http.get
-    { url = "https://api.themoviedb.org/3/search/person?api_key=118f2e5c4f9f1d17942a3271a18b5ea2&query=" ++ query
-    , expect = Http.expectJson GotActors actorsDecoder
+    { url = "https://api.themoviedb.org/3/person/" ++ id ++ "?api_key=118f2e5c4f9f1d17942a3271a18b5ea2"
+    , expect = Http.expectJson GotActor actorDecoder
     }
-
-actorsDecoder : Decoder (List Actor)
-actorsDecoder =
-  field "results" (list actorDecoder)
 
 actorDecoder : Decoder Actor
 actorDecoder =
-  map3 Actor
+  map2 Actor
         (field "profile_path" (maybe string))
         (field "name" (maybe string))
-        (field "id" (maybe int))
 --         (field "known_for" (list movieDecoder))
 
 -- movieDecoder : Decoder Movie

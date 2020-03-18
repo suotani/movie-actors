@@ -22,8 +22,11 @@
 <body>
   <div id="elm-node" class="demo"></div>
   <script type="text/javascript">
+    var params = (new URL(document.location)).searchParams;
+    var id = params.get('id');
     Elm.Actor.init({
-        node: document.getElementById("elm-node")
+        node: document.getElementById("elm-node"),
+        flags: id
     })
   </script>
 </body>

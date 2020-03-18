@@ -4530,17 +4530,17 @@ function _Browser_load(url)
 		}
 	}));
 }
-var author$project$Actors$Loading = {$: 'Loading'};
-var author$project$Actors$Model = F4(
-	function (actors, viewStatus, query, message) {
-		return {actors: actors, message: message, query: query, viewStatus: viewStatus};
+var author$project$Actor$Loading = {$: 'Loading'};
+var author$project$Actor$Model = F4(
+	function (actor, viewStatus, id, message) {
+		return {actor: actor, id: id, message: message, viewStatus: viewStatus};
 	});
-var author$project$Actors$GotActors = function (a) {
-	return {$: 'GotActors', a: a};
+var author$project$Actor$GotActor = function (a) {
+	return {$: 'GotActor', a: a};
 };
-var author$project$Actors$Actor = F3(
-	function (imagePath, name, id) {
-		return {id: id, imagePath: imagePath, name: name};
+var author$project$Actor$Actor = F2(
+	function (imagePath, name) {
+		return {imagePath: imagePath, name: name};
 	});
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
@@ -5018,8 +5018,7 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 		}
 	});
 var elm$json$Json$Decode$field = _Json_decodeField;
-var elm$json$Json$Decode$int = _Json_decodeInt;
-var elm$json$Json$Decode$map3 = _Json_map3;
+var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$oneOf = _Json_oneOf;
 var elm$json$Json$Decode$succeed = _Json_succeed;
@@ -5032,9 +5031,9 @@ var elm$json$Json$Decode$maybe = function (decoder) {
 			]));
 };
 var elm$json$Json$Decode$string = _Json_decodeString;
-var author$project$Actors$actorDecoder = A4(
-	elm$json$Json$Decode$map3,
-	author$project$Actors$Actor,
+var author$project$Actor$actorDecoder = A3(
+	elm$json$Json$Decode$map2,
+	author$project$Actor$Actor,
 	A2(
 		elm$json$Json$Decode$field,
 		'profile_path',
@@ -5042,16 +5041,10 @@ var author$project$Actors$actorDecoder = A4(
 	A2(
 		elm$json$Json$Decode$field,
 		'name',
-		elm$json$Json$Decode$maybe(elm$json$Json$Decode$string)),
-	A2(
-		elm$json$Json$Decode$field,
-		'id',
-		elm$json$Json$Decode$maybe(elm$json$Json$Decode$int)));
-var elm$json$Json$Decode$list = _Json_decodeList;
-var author$project$Actors$actorsDecoder = A2(
-	elm$json$Json$Decode$field,
-	'results',
-	elm$json$Json$Decode$list(author$project$Actors$actorDecoder));
+		elm$json$Json$Decode$maybe(elm$json$Json$Decode$string)));
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
 var elm$core$Result$mapError = F2(
 	function (f, result) {
 		if (result.$ === 'Ok') {
@@ -5068,9 +5061,6 @@ var elm$core$Basics$composeR = F3(
 		return g(
 			f(x));
 	});
-var elm$core$Basics$identity = function (x) {
-	return x;
-};
 var elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
 var elm$core$Basics$compare = _Utils_compare;
@@ -5933,20 +5923,20 @@ var elm$http$Http$get = function (r) {
 	return elm$http$Http$request(
 		{body: elm$http$Http$emptyBody, expect: r.expect, headers: _List_Nil, method: 'GET', timeout: elm$core$Maybe$Nothing, tracker: elm$core$Maybe$Nothing, url: r.url});
 };
-var author$project$Actors$getActors = function (query) {
+var author$project$Actor$getActor = function (id) {
 	return elm$http$Http$get(
 		{
-			expect: A2(elm$http$Http$expectJson, author$project$Actors$GotActors, author$project$Actors$actorsDecoder),
-			url: 'https://api.themoviedb.org/3/search/person?api_key=118f2e5c4f9f1d17942a3271a18b5ea2&query=' + query
+			expect: A2(elm$http$Http$expectJson, author$project$Actor$GotActor, author$project$Actor$actorDecoder),
+			url: 'https://api.themoviedb.org/3/person/' + (id + '?api_key=118f2e5c4f9f1d17942a3271a18b5ea2')
 		});
 };
-var author$project$Actors$init = function (_n0) {
+var author$project$Actor$init = function (id) {
 	return _Utils_Tuple2(
-		A4(author$project$Actors$Model, _List_Nil, author$project$Actors$Loading, 'jon', ''),
-		author$project$Actors$getActors('jon'));
+		A4(author$project$Actor$Model, elm$core$Maybe$Nothing, author$project$Actor$Loading, id, ''),
+		author$project$Actor$getActor(id));
 };
-var author$project$Actors$Loaded = {$: 'Loaded'};
-var author$project$Actors$errorToString = function (error) {
+var author$project$Actor$Loaded = {$: 'Loaded'};
+var author$project$Actor$errorToString = function (error) {
 	switch (error.$) {
 		case 'BadUrl':
 			var url = error.a;
@@ -5971,47 +5961,32 @@ var author$project$Actors$errorToString = function (error) {
 };
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
-var author$project$Actors$update = F2(
+var author$project$Actor$update = F2(
 	function (msg, model) {
-		switch (msg.$) {
-			case 'GotActors':
-				var result = msg.a;
-				if (result.$ === 'Ok') {
-					var actors = result.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{actors: actors, viewStatus: author$project$Actors$Loaded}),
-						elm$core$Platform$Cmd$none);
-				} else {
-					var e = result.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								actors: _List_Nil,
-								message: author$project$Actors$errorToString(e),
-								viewStatus: author$project$Actors$Loaded
-							}),
-						elm$core$Platform$Cmd$none);
-				}
-			case 'SetQuery':
-				var query = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{query: query}),
-					elm$core$Platform$Cmd$none);
-			default:
-				return _Utils_Tuple2(
+		var result = msg.a;
+		if (result.$ === 'Ok') {
+			var actor = result.a;
+			return _Utils_Tuple2(
+				_Utils_update(
 					model,
-					author$project$Actors$getActors(model.query));
+					{
+						actor: elm$core$Maybe$Just(actor),
+						viewStatus: author$project$Actor$Loaded
+					}),
+				elm$core$Platform$Cmd$none);
+		} else {
+			var e = result.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						actor: elm$core$Maybe$Nothing,
+						message: author$project$Actor$errorToString(e),
+						viewStatus: author$project$Actor$Loaded
+					}),
+				elm$core$Platform$Cmd$none);
 		}
 	});
-var author$project$Actors$GetActors = {$: 'GetActors'};
-var author$project$Actors$SetQuery = function (a) {
-	return {$: 'SetQuery', a: a};
-};
 var elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -6021,7 +5996,6 @@ var elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	switch (handler.$) {
 		case 'Normal':
@@ -6034,151 +6008,38 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 			return 3;
 	}
 };
-var elm$html$Html$a = _VirtualDom_node('a');
+var elm$html$Html$h1 = _VirtualDom_node('h1');
 var elm$html$Html$p = _VirtualDom_node('p');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
-var elm$json$Json$Encode$string = _Json_wrap;
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
-var elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
-var author$project$Actors$actorView = function (actor) {
-	var _n0 = actor.name;
-	if (_n0.$ === 'Just') {
-		var name = _n0.a;
+var author$project$Actor$actorView = function (actor) {
+	if (actor.$ === 'Just') {
+		var a = actor.a;
 		return A2(
 			elm$html$Html$p,
 			_List_Nil,
 			_List_fromArray(
 				[
 					A2(
-					elm$html$Html$a,
+					elm$html$Html$h1,
+					_List_Nil,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$href(
-							'./actor.html?id=' + elm$core$String$fromInt(
-								A2(elm$core$Maybe$withDefault, 0, actor.id)))
-						]),
-					_List_fromArray(
-						[
-							elm$html$Html$text(name)
+							elm$html$Html$text(
+							A2(elm$core$Maybe$withDefault, '', a.name))
 						]))
 				]));
 	} else {
 		return A2(elm$html$Html$p, _List_Nil, _List_Nil);
 	}
 };
-var elm$core$List$map = F2(
-	function (f, xs) {
-		return A3(
-			elm$core$List$foldr,
-			F2(
-				function (x, acc) {
-					return A2(
-						elm$core$List$cons,
-						f(x),
-						acc);
-				}),
-			_List_Nil,
-			xs);
-	});
-var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$div = _VirtualDom_node('div');
-var elm$html$Html$input = _VirtualDom_node('input');
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
-var elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
-};
-var elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
-	});
-var elm$html$Html$Events$targetValue = A2(
-	elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	elm$json$Json$Decode$string);
-var elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			elm$json$Json$Decode$map,
-			elm$html$Html$Events$alwaysStop,
-			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
-};
-var author$project$Actors$view = function (model) {
+var author$project$Actor$view = function (model) {
 	return A2(
 		elm$html$Html$div,
 		_List_Nil,
 		_List_fromArray(
 			[
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('search')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$input,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$type_('text'),
-								elm$html$Html$Events$onInput(author$project$Actors$SetQuery)
-							]),
-						_List_Nil),
-						A2(
-						elm$html$Html$button,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$type_('button'),
-								elm$html$Html$Events$onClick(author$project$Actors$GetActors)
-							]),
-						_List_fromArray(
-							[
-								elm$html$Html$text('Search')
-							]))
-					])),
 				function () {
 				var _n0 = model.viewStatus;
 				if (_n0.$ === 'Loading') {
@@ -6190,7 +6051,7 @@ var author$project$Actors$view = function (model) {
 								elm$html$Html$text('Loading...')
 							]));
 				} else {
-					return _Utils_eq(model.actors, _List_Nil) ? A2(
+					return _Utils_eq(model.actor, elm$core$Maybe$Nothing) ? A2(
 						elm$html$Html$div,
 						_List_Nil,
 						_List_fromArray(
@@ -6212,12 +6073,10 @@ var author$project$Actors$view = function (model) {
 							])) : A2(
 						elm$html$Html$div,
 						_List_Nil,
-						A2(
-							elm$core$List$map,
-							function (u) {
-								return author$project$Actors$actorView(u);
-							},
-							model.actors));
+						_List_fromArray(
+							[
+								author$project$Actor$actorView(model.actor)
+							]));
 				}
 			}()
 			]));
@@ -6244,6 +6103,20 @@ var elm$core$Task$Perform = function (a) {
 	return {$: 'Perform', a: a};
 };
 var elm$core$Task$init = elm$core$Task$succeed(_Utils_Tuple0);
+var elm$core$List$map = F2(
+	function (f, xs) {
+		return A3(
+			elm$core$List$foldr,
+			F2(
+				function (x, acc) {
+					return A2(
+						elm$core$List$cons,
+						f(x),
+						acc);
+				}),
+			_List_Nil,
+			xs);
+	});
 var elm$core$Task$map = F2(
 	function (func, taskA) {
 		return A2(
@@ -6426,14 +6299,13 @@ var elm$url$Url$fromString = function (str) {
 var elm$browser$Browser$element = _Browser_element;
 var elm$core$Platform$Sub$batch = _Platform_batch;
 var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
-var author$project$Actors$main = elm$browser$Browser$element(
+var author$project$Actor$main = elm$browser$Browser$element(
 	{
-		init: author$project$Actors$init,
+		init: author$project$Actor$init,
 		subscriptions: function (_n0) {
 			return elm$core$Platform$Sub$none;
 		},
-		update: author$project$Actors$update,
-		view: author$project$Actors$view
+		update: author$project$Actor$update,
+		view: author$project$Actor$view
 	});
-_Platform_export({'Actors':{'init':author$project$Actors$main(
-	elm$json$Json$Decode$succeed(_Utils_Tuple0))(0)}});}(this));
+_Platform_export({'Actor':{'init':author$project$Actor$main(elm$json$Json$Decode$string)(0)}});}(this));
